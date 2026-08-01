@@ -4,7 +4,7 @@ import requests
 from datetime import date, datetime,timedelta,time as dt_time
 from dotenv import load_dotenv
 from notion import sync_trades
-
+from zoneinfo import ZoneInfo
 import os
 BASE_URL = "https://api.topstepx.com/api"
 CONTRACT_TYPE = {0: "Long", 1: "Short"}
@@ -131,5 +131,9 @@ username = os.getenv("USERNAME")
 headers = login(username, api_key)
 
 while(True):
+    current_time = datetime.now(ZoneInfo("America/New_York")).hour
+    if date.today().weekday() == 5 or current_time == 17:
+        time.sleep(3600)
+        continue
     headers =run(headers)
     time.sleep(30)
