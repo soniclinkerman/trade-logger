@@ -134,6 +134,7 @@ while(True):
     current_time = datetime.now(ZoneInfo("America/New_York")).hour
     if date.today().weekday() == 5 or current_time == 17:
         time.sleep(3600)
+        print("Market is closed")
         continue
     headers =run(headers)
     time.sleep(30)
