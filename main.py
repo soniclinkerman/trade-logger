@@ -110,8 +110,8 @@ def run(headers):
         session_start_et = datetime.combine(now_et.date(), dt_time(18, 0), tzinfo=et)
         session_end_et = datetime.combine(now_et.date() + timedelta(days=1), dt_time(17, 0), tzinfo=et)
 
-    session_start = session_start_et.strftime("%Y-%m-%dT%H:%M:%S")
-    session_end = session_end_et.strftime("%Y-%m-%dT%H:%M:%S")
+    session_start = session_start_et.astimezone(ZoneInfo("UTC")).strftime("%Y-%m-%dT%H:%M:%S")
+    session_end = session_end_et.astimezone(ZoneInfo("UTC")).strftime("%Y-%m-%dT%H:%M:%S")
     trade_payload = {"accountId": account["id"], "startTimestamp": session_start,
                      "endTimestamp": session_end}
     trade_response = requests.post(f'{BASE_URL}/Trade/search', json=trade_payload, headers=headers)
