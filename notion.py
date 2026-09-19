@@ -3,8 +3,11 @@ import requests
 from dotenv import load_dotenv
 from datetime import datetime
 from zoneinfo import ZoneInfo
-NOTION_URL = "https://api.notion.com/v1"
 
+from screenshot_capture import take_screenshot
+
+NOTION_URL = "https://api.notion.com/v1"
+import json
 load_dotenv()
 notion_api_key = os.getenv("NOTION_API_KEY")
 PARENT_PAGE_ID = os.getenv("NOTION_PARENT_PAGE_ID")
@@ -184,6 +187,11 @@ def sync_trades(grouped_trades):
                         }
                     }
                 )
+                now = datetime.now()
+                formatted_string = now.strftime("%Y-%m-%d_%H-%M-%S")
+
+                take_screenshot(formatted_string)
+                add_screenshot_to_trade(f"{formatted_string}.png",page_id)
 
         if blocks:
             requests.patch(
@@ -195,3 +203,61 @@ def sync_trades(grouped_trades):
 
     print("Complete")
 
+
+
+def add_screenshot_to_trade(trade_file_name, page_id):
+    payload = {
+        "filename": "trade_screenshot",
+        "content_type": "image/png"
+    }
+    send_headers = {
+        "Authorization": f"Bearer {notion_api_key}",
+        "Notion-Version": "2026-03-11"
+    }
+
+    file_create_response = requests.post("https://api.notion.com/v1/file_uploads", json=payload, headers=get_headers())
+
+    if file_create_response.status_code != 200:
+        raise Exception(
+            f"File creation failed with status code {file_create_response.status_code}: {file_create_response.text}"
+        )
+
+    file_upload_id = json.loads(file_create_response.text)['id']
+    file_name = trade_file_name
+
+    with open(file_name, "rb") as f:
+        files = {
+            "file": (file_name, f, "image/png")
+        }
+
+        response = requests.post(
+            f"https://api.notion.com/v1/file_uploads/{file_upload_id}/send",
+            headers=send_headers,
+            files=files
+        )
+
+        if response.status_code != 200:
+            raise Exception(
+                f"File upload failed with status code {response.status_code}: {response.text}")
+
+        payload = {
+            "children": [
+                {
+                    "object": "block",
+                    "type": "image",
+                    "image": {
+                        "type": "file_upload",
+                        "file_upload": {
+                            "id": file_upload_id
+                        }
+                    }
+                }
+            ]
+        }
+
+        url = f"https://api.notion.com/v1/blocks/{page_id}/children"
+        response = requests.patch(url, headers=get_headers(), data=json.dumps(payload))
+
+        if response.status_code != 200:
+            raise Exception(
+                f"Block append failed with status code {response.status_code}: {response.text}")
