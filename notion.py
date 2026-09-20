@@ -117,6 +117,7 @@ def sync_trades(grouped_trades):
             existing_pages[block["child_page"]["title"]] = block["id"]
     print(existing_pages)
     page_id = None
+    new_trade_logged=False
 
     for trade_date in grouped_trades:
         if trade_date not in existing_pages:
@@ -192,6 +193,7 @@ def sync_trades(grouped_trades):
 
                 take_screenshot(formatted_string)
                 add_screenshot_to_trade(f"{formatted_string}.png",page_id)
+                new_trade_logged = True
 
         if blocks:
             requests.patch(
@@ -199,6 +201,10 @@ def sync_trades(grouped_trades):
                 headers=headers,
                 json={"children": blocks}
             )
+    if new_trade_logged:
+        requests.post(os.getenv("NTFY_LINK"),
+                      data="Trade successfully Logged 😀".encode(encoding='utf-8'))
+
 
 
     print("Complete")
