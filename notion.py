@@ -115,7 +115,6 @@ def sync_trades(grouped_trades):
     for block in data["results"]:
         if block["type"] == "child_page":
             existing_pages[block["child_page"]["title"]] = block["id"]
-    print(existing_pages)
     page_id = None
     new_trade_logged=False
 
@@ -125,7 +124,6 @@ def sync_trades(grouped_trades):
             page_id = new_page["id"]
             print("Page Created")
         else:
-            print("Page Already Exists")
             page_id = existing_pages[trade_date]
 
 
